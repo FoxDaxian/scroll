@@ -6,12 +6,13 @@
     "author": "a13821190779 <945039036@qq.com>",
     "license": "MIT",
     "scripts": {
-        "dev": "cross-env DEBUG=console.* babel-node ./build/webpack.dev.js"
+        "dev": "cross-env DEBUG=console.*,socket.io* babel-node ./build/webpack.dev.js"
     },
     "dependencies": {
         "babel-runtime": "^6.26.0",
         "config": "^1.30.0",
         "express": "^4.16.3",
+        "socket.io": "^2.1.0",
         "webpack": "^3.0.0"
     },
     "devDependencies": {

@@ -6,6 +6,9 @@ import config from 'config';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import path from 'path';
 import fs from 'fs';
+import socketIo from 'socket.io';
+import http from 'http';
+
 const log = debug('console.log: ');
 const { port } = config;
 
@@ -21,8 +24,11 @@ const hasHtml = () => {
 const app = express();
 
 app.use('/', express.static(path.resolve(__dirname, '../dist')));
+const httpServer = http.createServer(app);
 
-const server = app.listen(port, async () => {
+const io = socketIo(httpServer);
+
+const server = httpServer.listen(port, async () => {
     if (!await hasHtml()) {
         defaultConf.plugins.push(
             new HtmlWebpackPlugin({
@@ -48,4 +54,7 @@ const server = app.listen(port, async () => {
 
     const { port } = server.address();
     log(`链接为: http://localhost:${port}`);
+});
+io.on('connection', () => {
+    log('io连接');
 });
