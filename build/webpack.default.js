@@ -7,8 +7,8 @@ const outputPath = path.resolve(__dirname, '../dist');
 const webpackConfig = {
     entry,
     output: {
-        filename: 'bundle.js',
-        path: path.join(outputPath, 'static')
+        filename: './static/bundle.js',
+        path: outputPath
     },
     plugins: []
 };
