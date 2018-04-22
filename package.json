@@ -6,24 +6,33 @@
     "author": "a13821190779 <945039036@qq.com>",
     "license": "MIT",
     "scripts": {
-        "dev": "cross-env DEBUG=console.*,socket.io* babel-node ./build/webpack.dev.js"
+        "dev": "cross-env DEBUG=console.* babel-node ./build/webpack.dev.js"
     },
     "dependencies": {
         "babel-runtime": "^6.26.0",
+        "cheerio": "^1.0.0-rc.2",
         "config": "^1.30.0",
         "express": "^4.16.3",
         "socket.io": "^2.1.0",
-        "webpack": "^3.0.0"
+        "webpack": "^3.0.0",
+        "webpack-merge": "^4.1.2"
     },
     "devDependencies": {
         "babel-cli": "^6.26.0",
+        "babel-loader": "^7.1.4",
         "babel-plugin-transform-runtime": "^6.23.0",
         "babel-preset-es2015": "^6.24.1",
         "babel-preset-stage-2": "^6.24.1",
         "cross-env": "^5.1.4",
+        "css-loader": "^0.28.11",
         "debug": "^3.1.0",
+        "extract-text-webpack-plugin": "^3.0.2",
+        "happypack": "^4.0.1",
         "html-webpack-plugin": "^3.2.0",
         "memory-fs": "^0.4.1",
-        "nodemon": "^1.17.3"
+        "node-sass": "^4.8.3",
+        "nodemon": "^1.17.3",
+        "sass-loader": "^7.0.1",
+        "style-loader": "^0.21.0"
     }
 }
