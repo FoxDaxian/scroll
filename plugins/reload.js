@@ -12,14 +12,7 @@ HelloWorldPlugin.prototype.apply = function(compiler) {
                 const $ = cheerio.load(item[1].source());
                 $('body').append(
                     `<script src="/socket.io/socket.io.js"></script>
-					<script>
-						var socket = io();
-						socket.on('connect', function () {
-							socket.on('reload', function () {
-								window.location.reload()
-							})
-						})
-					</script>
+					<script>var socket = io();socket.on('connect', function () {socket.on('reload', function () {window.location.reload()})})</script>
 					`
                 );
                 compilation.assets[item[0]].source = () => $.html();
