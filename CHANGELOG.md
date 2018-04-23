@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.3.0"></a>
+# [1.3.0](https://github.com/a13821190779/scroll/compare/v1.1.0...v1.3.0) (2018-04-23)
+
+
+### Bug Fixes
+
+* 无法自动更新chage-log ([ab1567c](https://github.com/a13821190779/scroll/commit/ab1567c))
+
+
+### Features
+
+* 自动更新change-log ([0e9efb5](https://github.com/a13821190779/scroll/commit/0e9efb5))
+
+
+
 <a name="1.2.0"></a>
 # [1.2.0](https://github.com/a13821190779/scroll/compare/v1.1.0...v1.2.0) (2018-04-23)
 
