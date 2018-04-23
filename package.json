@@ -7,7 +7,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "cross-env DEBUG=console.* babel-node ./build/webpack.dev.js",
-    "release": "standard-version"
+    "release": "standard-version && git push"
   },
   "husky": {
     "hooks": {
