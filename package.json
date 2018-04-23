@@ -1,6 +1,6 @@
 {
   "name": "scroll",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "main": "index.js",
   "repository": "https://github.com/a13821190779/scroll.git",
   "author": "a13821190779 <945039036@qq.com>",
@@ -11,8 +11,7 @@
   },
   "husky": {
     "hooks": {
-      "commit-msg": "commitlint -e $GIT_PARAMS",
-	  "post-commit": "npm run release"
+      "commit-msg": "commitlint -e $GIT_PARAMS"
     }
   },
   "dependencies": {
