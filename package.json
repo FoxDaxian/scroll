@@ -11,7 +11,8 @@
   },
   "husky": {
     "hooks": {
-      "commit-msg": "commitlint -e $GIT_PARAMS"
+      "commit-msg": "commitlint -e $GIT_PARAMS",
+	  "post-commit": "npm run release"
     }
   },
   "dependencies": {
