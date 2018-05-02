@@ -1,0 +1,24 @@
+{
+    "log4js": {
+        "appenders": {
+            "default": {
+                "type": "file",
+                "filename": "default.log"
+            },
+            "compilerStats": {
+                "type": "file",
+                "filename": "compiler_stats.log"
+            }
+        },
+        "categories": {
+            "default": {
+                "appenders": ["default"],
+                "level": "debug"
+            },
+            "compilerStats": {
+                "appenders": ["compilerStats"],
+                "level": "debug"
+            }
+        }
+    }
+}

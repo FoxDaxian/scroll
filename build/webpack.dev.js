@@ -2,7 +2,7 @@
  * @Author: fox 
  * @Date: 2018-04-22 13:02:42 
  * @Last Modified by: fox
- * @Last Modified time: 2018-04-22 17:16:26
+ * @Last Modified time: 2018-05-02 18:11:12
  */
 import webpack from 'webpack';
 import debug from 'debug';
@@ -16,20 +16,69 @@ import Mfs from 'memory-fs';
 import merge from 'webpack-merge';
 import ExtractTextPlugin from 'extract-text-webpack-plugin';
 import HappyPack from 'happypack';
+import logs from '../tools/logs';
+import chalk from 'chalk';
 
 // build by myself
 import defaultConf from './webpack.default';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import myPlugin from '../plugins/reload';
+const { compilerStatsLogger } = logs;
+import clear from '../tools/clear';
 
 const extractSass = new ExtractTextPlugin({
     filename: 'static/scss/[name].[contenthash].css'
 });
 
-console.log = debug('console.log: ');
+const log = debug('console.log: ');
 const { port } = config;
 const mfs = new Mfs();
 const app = express();
+const httpServer = http.createServer(app);
+const io = socketIo(httpServer);
+
+const htmlPath = path.resolve(__dirname, '../dist/index.html');
+const hasHtml = () => {
+    return fs.existsSync(htmlPath);
+};
+if (!hasHtml()) {
+    defaultConf.plugins.push(
+        new HtmlWebpackPlugin({
+            filename: './index.html',
+            template: path.resolve(__dirname, '../index.html')
+        })
+    );
+}
+defaultConf.plugins.push(new myPlugin());
+const devConf = merge(defaultConf, {
+    devtool: 'cheap-module-eval-source-map',
+    module: {
+        rules: [
+            {
+                test: /\.scss$/,
+                use: extractSass.extract({
+                    use: ['happypack/loader?id=scss'],
+                    fallback: 'style-loader'
+                })
+            }
+        ]
+    },
+    plugins: [
+        new webpack.DefinePlugin({
+            'process.env.NODE_ENV': JSON.stringify('dev')
+        }),
+        new HappyPack({
+            id: 'scss',
+            loaders: ['css-loader', 'sass-loader']
+        }),
+        extractSass
+    ]
+});
+
+const compiler = webpack(devConf);
+compiler.outputFileSystem = mfs;
+
+const outpathPath = compiler.options.output.path;
 app.get('/', (req, res) => {
     res.setHeader('Content-Type', 'text/html');
     res.end(mfs.readFileSync(path.resolve(outpathPath, 'index.html')));
@@ -44,60 +93,16 @@ app.get('*', (req, res) => {
         }
         res.end(mfs.readFileSync(outpathPath + req.path));
     } catch (e) {
-        console.log(e);
+        log(e);
         res.set({
             'Content-Type': 'text/plain;charset=UTF-8'
         });
         res.status(404).end('未发现响应文件内容');
     }
 });
-const httpServer = http.createServer(app);
-const io = socketIo(httpServer);
 
-const htmlPath = path.resolve(__dirname, '../dist/index.html');
-const hasHtml = () => {
-    return fs.existsSync(htmlPath);
-};
-if (!hasHtml()) {
-    defaultConf.plugins.push(
-        new HtmlWebpackPlugin({
-            filename: './index.html',
-			template: path.resolve(__dirname, '../index.html')
-        })
-    );
-}
-defaultConf.plugins.push(new myPlugin());
-const devConf = merge(defaultConf, {
-    devtool: 'cheap-module-eval-source-map',
-    module: {
-        rules: [
-            {
-                test: /\.scss$/,
-                use: extractSass.extract({
-					use: ['happypack/loader?id=scss'],
-                    fallback: 'style-loader'
-                })
-            }
-        ]
-    },
-    plugins: [
-        new webpack.DefinePlugin({
-            'process.env.NODE_ENV': JSON.stringify('dev')
-        }),
-		new HappyPack({
-			id: 'scss',
-			loaders: [
-				'css-loader', 'sass-loader'
-			]
-		}),
-        extractSass
-    ]
-});
-
-const compiler = webpack(devConf);
-compiler.outputFileSystem = mfs;
-
-const outpathPath = compiler.options.output.path;
+// 上一次编译的chunks的hash记录
+let lastChunkHash = [];
 
 compiler.watch(
     {
@@ -105,14 +110,38 @@ compiler.watch(
         ignored: /(node_modules|dist)/,
         poll: 1000
     },
-    (err, stats) => {
+    function(err, stats) {
+        const compilerRes = stats.toJson();
         if (!err) {
-            io.emit('reload');
+            // 对比决定是否reoad
+            if (
+                lastChunkHash.length === 0 ||
+                compilerRes.chunks.every(
+                    (chunk, index) => chunk.hash !== lastChunkHash[index].hash
+                )
+            ) {
+                io.emit('reload');
+                clear();
+                process.stdout.write(
+                    '\n\n' +
+                        stats.toString({
+                            colors: true,
+                            modules: false,
+                            children: false, // If you are using ts-loader, setting this to true will make TypeScript errors show up during build.
+                            chunks: false,
+                            chunkModules: false
+                        }) +
+                        '\n\n'
+                );
+            }
+            lastChunkHash = compilerRes.chunks;
         }
     }
 );
 
 const server = httpServer.listen(port, async () => {
     const { port } = server.address();
-    console.log(`链接为: http://localhost:${port}`);
+    process.stdout.write(
+        chalk.blueBright(`链接为: http://localhost:${port}\n`)
+    );
 });
