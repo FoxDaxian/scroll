@@ -2,7 +2,7 @@
  * @Author: fox 
  * @Date: 2018-04-22 13:02:42 
  * @Last Modified by: fox
- * @Last Modified time: 2018-05-02 18:11:12
+ * @Last Modified time: 2018-05-03 16:24:01
  */
 import webpack from 'webpack';
 import debug from 'debug';
@@ -18,6 +18,7 @@ import ExtractTextPlugin from 'extract-text-webpack-plugin';
 import HappyPack from 'happypack';
 import logs from '../tools/logs';
 import chalk from 'chalk';
+import open from 'open';
 
 // build by myself
 import defaultConf from './webpack.default';
@@ -48,6 +49,8 @@ if (!hasHtml()) {
             template: path.resolve(__dirname, '../index.html')
         })
     );
+} else {
+    // 没有目录的模板html的时候
 }
 defaultConf.plugins.push(new myPlugin());
 const devConf = merge(defaultConf, {
@@ -104,6 +107,7 @@ app.get('*', (req, res) => {
 // 上一次编译的chunks的hash记录
 let lastChunkHash = [];
 
+let hasOpen = false;
 compiler.watch(
     {
         aggregateTimeout: 500,
@@ -113,6 +117,10 @@ compiler.watch(
     function(err, stats) {
         const compilerRes = stats.toJson();
         if (!err) {
+            if (!hasOpen) {
+                open(`http://localhost:${port}`);
+                hasOpen = !hasOpen;
+            }
             // 对比决定是否reoad
             if (
                 lastChunkHash.length === 0 ||
