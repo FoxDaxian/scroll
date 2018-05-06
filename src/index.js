@@ -37,7 +37,8 @@ class Scroll {
                 last: 0,
                 now: 0
             }
-        }
+        },
+        lastMoveE: null
     };
 
     className = {
@@ -59,6 +60,7 @@ class Scroll {
         screenW: window.screen.width
     };
 
+    // 边缘伸缩部分
     stretch = {
         scrollMax: 100,
         max: document.documentElement.clientHeight, // 最大伸缩距离
@@ -208,9 +210,6 @@ class Scroll {
                     Math.abs(this.getTranslate()) <= (Math.abs(aimTranslate) + 0.2) && this.setTranslate(aimTranslate);
                 }
 
-
-
-
                 this.mark.scroll.curTranslate = this.getTranslate();
                 this.emit(
                     'onScroll',
@@ -237,6 +236,7 @@ class Scroll {
     }
 
     touchStart(e) {
+        this.mark.isBounds = true
         const fnName = this.touchStart.name;
         const touch = Array.from(e.touches)[0];
         this.emitEvent(fnName, e, touch);
@@ -275,7 +275,6 @@ class Scroll {
                     restDist / this.stretch.strength * moveNum / restDist;
 
             } else if (this.mark.scroll.curTranslate < this.stretch.bottomScrollMax) {
-                console.log(123);
                 const restDist =
                     this.stretch.bottomScrollMax - this.mark.scroll.curTranslate
 
@@ -314,12 +313,24 @@ class Scroll {
         }
     }
 
+    // 超出边界，利用自定义事件
     outOfBounds(e) {
         const pageH = document.documentElement.clientHeight
         const touch = Array.from(e.changedTouches)[0];
-        if (touch.clientY < 0 || touch.clientY > pageH) {
-            this.mark.isBounds = true
+
+        if (this.mark.scroll.curTranslate > 0 && touch.clientY > pageH || this.mark.scroll.curTranslate < this.stretch.bottomScrollMax && touch.clientY < 0) {
+            if (this.mark.isBounds) {
+                var event = new CustomEvent('touchend', {
+                    detail: {
+                        outof: true,
+                        e: this.mark.lastMoveE
+                    }
+                });
+                window.dispatchEvent(event)
+            };
         }
+
+        this.mark.lastMoveE = e
     }
 
     initTouchMove() {
@@ -329,21 +340,26 @@ class Scroll {
 
     touchEnd(e) {
         const fnName = this.touchEnd.name;
-        const touch = Array.from(e.changedTouches)[0];
+        let custom = e
+        if (e.detail.outof) {
+            custom = e.detail.e
+        }
+        this.mark.isBounds = false
+        const touch = Array.from(custom.changedTouches)[0];
         if (this.mark.identifier === touch.identifier) {
-            this.emitEvent(fnName, e, touch);
             this.mark.identifier = null;
+            this.emitEvent(fnName, custom, touch);
             this.mark.scroll.curTranslate = this.getTranslate();
 
             // 手指抬起的时候如果超过返回，则调用开始回缩
             // 回缩功能
             if (this.mark.scroll.curTranslate > 0) {
-                this.retraction(0, e, touch)
+                this.retraction(0, custom, touch)
             } else if (this.mark.scroll.curTranslate < this.stretch.bottomScrollMax) {
-                this.retraction(this.stretch.bottomScrollMax, e, touch)
+                this.retraction(this.stretch.bottomScrollMax, custom, touch)
             } else {
                 // 缓冲动画
-                if (e.timeStamp - this.mark.inertialMotion.time.now < 30) {
+                if (custom.timeStamp - this.mark.inertialMotion.time.now < 30) {
                     const time =
                         this.mark.inertialMotion.time.now -
                         this.mark.inertialMotion.time.last;
@@ -441,13 +457,13 @@ scroll.on('onTouchEnd', args => {
 });
 
 scroll.on('onScrollStart', args => {
-    // console.log('scroll开始');
+    // console.log('滚动   ==开始');
 });
 scroll.on('onScroll', args => {
-    // console.log('scroll 中');
+    // console.log('滚动   ==中');
 });
 scroll.on('onScrollEnd', args => {
-    // console.log('scroll结束');
+    // console.log('滚动   ==结束');
 });
 
 scroll.on('onRefresh', () => {
