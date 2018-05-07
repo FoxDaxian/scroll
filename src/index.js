@@ -2,7 +2,7 @@
  * @Author: fox 
  * @Date: 2018-05-03 11:07:37 
  * @Last Modified by: fox
- * @Last Modified time: 2018-05-07 17:58:38
+ * @Last Modified time: 2018-05-07 18:20:07
  */
 
 // touchstart:		手指触摸到一个 DOM 元素时触发。
@@ -98,6 +98,7 @@ class Scroll {
 
         this.wrapBox = null;
         this.wrap = document.querySelector(classname);
+        this.wrap.classList.add('easywrap');
         this.preventNativeScroll();
         this.wrapAll();
         if (this.mark.scrollbars) {
@@ -125,11 +126,7 @@ class Scroll {
         const fragment = document.createDocumentFragment();
         this.wrapBox = document.createElement('div');
         this.wrapBox.classList.add('easybox');
-        this.wrap.style.overflow = 'hidden';
-        this.wrap.style.position = 'relative';
         // 需要手动设置高度
-        this.wrap.style.height = `${this.stretch.max}px`;
-        this.wrap.style.height = `60vh`;
         this.setTranslate(0);
         const allChildNodes = Array.from(this.wrap.children);
         allChildNodes.forEach((child, i) => {

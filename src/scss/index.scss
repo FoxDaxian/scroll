@@ -6,6 +6,11 @@
     width: 0;
     height: 0;
 }
+.easywrap {
+    height: 100vh;
+	overflow: hidden;
+	position: relative;
+}
 .easybar {
     position: absolute;
     width: 2px;
