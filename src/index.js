@@ -2,7 +2,7 @@
  * @Author: fox 
  * @Date: 2018-05-03 11:07:37 
  * @Last Modified by: fox
- * @Last Modified time: 2018-05-04 19:54:13
+ * @Last Modified time: 2018-05-07 17:58:38
  */
 
 // touchstart:		手指触摸到一个 DOM 元素时触发。
@@ -13,15 +13,20 @@
 // targetTouches:  正在触摸当前 DOM 元素上的手指的一个列表。
 // changedTouches: 涉及当前事件的手指的一个列表
 
+import 'scss/index.scss';
+
 class Scroll {
     mark = {
         identifier: null, // 唯一标识符，表明是否是同一次触摸过程
         direction: 'vertical', // horizontal vertical 默认垂直
+        scrollbars: false,
+        bounce: true,
         isBounds: false,
         // 正常滚动
         scroll: {
             touchPoiot: 0, // touchstart 点
-            curTranslate: 0 // 当前translate
+            curTranslate: 0, // 当前translate,
+            maxTranslate: 0 // 最大translate，不包括橡皮筋超出的
         },
         // 惯性运动
         inertialMotion: {
@@ -38,11 +43,8 @@ class Scroll {
                 now: 0
             }
         },
-        lastMoveE: null
-    };
-
-    className = {
-        box: Symbol('box').toString()
+        lastMoveE: null,
+        lastWrapBox: 0
     };
 
     eventQueue = {
@@ -64,38 +66,70 @@ class Scroll {
     stretch = {
         scrollMax: 100,
         max: document.documentElement.clientHeight, // 最大伸缩距离
-        strength: 4, // 伸缩强度
+        strength: 4, // 边缘牵扯力
         multiple: 0.18, // 回缩倍数
         radId: null,
         bottomScrollMax: 0,
         specialValue: 0.1
     };
 
-    constructor(classname) {
+    bar = {
+        el: null,
+        scrollMax: 0, // bar 能滚动的最大值
+        time: 1500,
+        stId: null
+    };
+
+    constructor(
+        classname,
+        conf = {
+            direction: 'vertical',
+            bounce: true,
+            scrollbars: false,
+            smooth: 40, //惯性运动光滑，越小摩擦力越大
+            pullForce: 4 // 边缘牵扯力，越大越难拉
+        }
+    ) {
+        this.mark.direction = conf.direction;
+        this.mark.scrollbars = conf.scrollbars;
+        this.mark.bounce = conf.bounce;
+        this.mark.inertialMotion.a = conf.smooth;
+        this.stretch.strength = conf.pullForce;
+
         this.wrapBox = null;
         this.wrap = document.querySelector(classname);
         this.preventNativeScroll();
         this.wrapAll();
+        if (this.mark.scrollbars) {
+            this.scrollBar();
+        }
 
         this.initTouchStart();
         this.initTouchMove();
         this.initTouchEnd();
-        if (this.wrapBox.offsetHeight < this.wrap.offsetHeight) {
-            this.stretch.bottomScrollMax = this.stretch.specialValue
-        } else {
-            this.stretch.bottomScrollMax = (this.wrapBox.offsetHeight - this.wrap.offsetHeight) * -1
-        }
 
+        if (this.wrapBox.offsetHeight < this.wrap.offsetHeight) {
+            this.stretch.bottomScrollMax = this.stretch.specialValue;
+        } else {
+            this.stretch.bottomScrollMax =
+                (this.wrapBox.offsetHeight - this.wrap.offsetHeight) * -1;
+            !this.stretch.bottomScrollMax &&
+                (this.stretch.bottomScrollMax = this.stretch.specialValue);
+        }
+        this.mark.scroll.maxTranslate =
+            this.wrapBox.offsetHeight - this.wrap.offsetHeight;
     }
 
     // 创建元素包裹容器内所有元素
     wrapAll() {
         const fragment = document.createDocumentFragment();
         this.wrapBox = document.createElement('div');
-        this.wrapBox.classList.add(this.className.box);
-        this.wrap.style.overflow = 'hidden'
-        // this.wrap.style.height = `${this.stretch.max}px`
-        this.wrap.style.height = `80vh`
+        this.wrapBox.classList.add('easybox');
+        this.wrap.style.overflow = 'hidden';
+        this.wrap.style.position = 'relative';
+        // 需要手动设置高度
+        this.wrap.style.height = `${this.stretch.max}px`;
+        this.wrap.style.height = `60vh`;
         this.setTranslate(0);
         const allChildNodes = Array.from(this.wrap.children);
         allChildNodes.forEach((child, i) => {
@@ -105,14 +139,81 @@ class Scroll {
         this.wrap.appendChild(fragment);
     }
 
+    // 配置滚动条
+    scrollBar() {
+        this.bar.el = document.createElement('div');
+        this.bar.el.classList.add('easybar');
+        this.wrap.appendChild(this.bar.el);
+        document.body.addEventListener('touchmove', this.barScroll.bind(this));
+    }
+
+    barScroll() {
+        if (!this.mark.scrollbars) {
+            return;
+        }
+        if (this.bar.el.classList.contains('hidden')) {
+            this.bar.el.classList.toggle('hidden');
+        }
+        this.bar.stId !== null && clearTimeout(this.bar.stId);
+        if (this.wrapBox.offsetHeight !== this.mark.lastWrapBox) {
+            this.setBarHeight();
+        }
+        const ratio =
+            this.mark.scroll.curTranslate / this.mark.scroll.maxTranslate * -1;
+        this.setbarTranslate(ratio * this.bar.scrollMax);
+        this.bar.stId = setTimeout(() => {
+            this.bar.el.classList.toggle('hidden');
+        }, this.bar.time);
+    }
+
+    setbarTranslate(value) {
+        this.bar.el.style.transform = `translateY(${value}px)`;
+    }
+
+    setBarHeight() {
+        if (this.wrap.offsetHeight < this.wrapBox.offsetHeight) {
+            this.bar.el.style.height = `${this.wrap.offsetHeight /
+                this.wrapBox.offsetHeight *
+                this.wrap.offsetHeight}px`;
+            this.bar.scrollMax =
+                this.wrap.offsetHeight - this.bar.el.offsetHeight;
+            this.mark.lastWrapBox = this.wrapBox.offsetHeight;
+        }
+    }
+
     // 禁止原生滚动
     preventNativeScroll() {
-        window.addEventListener('touchmove', function (e) {
+        document.body.addEventListener('touchmove', function(e) {
             e.preventDefault();
         });
-        window.addEventListener('mousewheel', function (e) {
+        document.body.addEventListener('mousewheel', function(e) {
             e.preventDefault();
         });
+        if (
+            window.navigator.userAgent.toLowerCase().match(/MicroMessenger/i) ==
+            'micromessenger'
+        ) {
+            const fragment = document.createDocumentFragment();
+            const forWxBox = document.createElement('div');
+            forWxBox.classList.add('forWx');
+            forWxBox.style.height = '100vh';
+            const allChildNodes = Array.from(document.body.children);
+            allChildNodes.forEach((child, i) => {
+                if (
+                    !['script', 'link'].includes(
+                        child.nodeName.toLocaleLowerCase()
+                    )
+                ) {
+                    forWxBox.appendChild(document.body.removeChild(child));
+                }
+            });
+            fragment.appendChild(forWxBox);
+            document.body.appendChild(fragment);
+
+            forWxBox.addEventListener('touchmove', function(e) {
+                e.preventDefault();
+            });
+        }
     }
 
     // 获取滑动距离
@@ -192,29 +293,34 @@ class Scroll {
 
     // 回缩功能函数
     retraction(aimTranslate, e, touch) {
-        let condition = false
+        let condition = false;
         if (aimTranslate === this.stretch.specialValue) {
-            condition = true
+            condition = true;
         }
         const stretchFn = () => {
-            if (Math.abs(this.mark.scroll.curTranslate) > Math.abs(aimTranslate)) {
-                let moveValue = (Math.abs(this.getTranslate()) - Math.abs(aimTranslate)) * this.stretch.multiple;
+            if (
+                Math.abs(this.mark.scroll.curTranslate) > Math.abs(aimTranslate)
+            ) {
+                let moveValue =
+                    (Math.abs(this.getTranslate()) - Math.abs(aimTranslate)) *
+                    this.stretch.multiple;
 
-                aimTranslate < 0 && (moveValue *= -1)
+                aimTranslate < 0 && (moveValue *= -1);
 
                 if (condition) {
                     this.setTranslate(this.getTranslate() + moveValue);
-                    Math.abs(this.getTranslate()) <= (Math.abs(aimTranslate) + 0.2) && this.setTranslate(0);
+                    Math.abs(this.getTranslate()) <=
+                        Math.abs(aimTranslate) + 0.2 && this.setTranslate(0);
                 } else {
                     this.setTranslate(this.getTranslate() - moveValue);
-                    Math.abs(this.getTranslate()) <= (Math.abs(aimTranslate) + 0.2) && this.setTranslate(aimTranslate);
+                    Math.abs(this.getTranslate()) <=
+                        Math.abs(aimTranslate) + 0.2 &&
+                        this.setTranslate(aimTranslate);
                 }
 
                 this.mark.scroll.curTranslate = this.getTranslate();
-                this.emit(
-                    'onScroll',
-                    this.returnHookArgs('scroll', e, touch)
-                );
+                this.emit('onScroll', this.returnHookArgs('scroll', e, touch));
+                this.barScroll();
                 this.stretch.radId = requestAnimationFrame(stretchFn);
             } else {
                 this.emit(
@@ -222,7 +328,6 @@ class Scroll {
                     this.returnHookArgs('scrollend', e, touch)
                 );
             }
-
         };
         this.stretch.radId = requestAnimationFrame(stretchFn);
     }
@@ -236,7 +341,7 @@ class Scroll {
     }
 
     touchStart(e) {
-        this.mark.isBounds = true
+        this.mark.isBounds = true;
         const fnName = this.touchStart.name;
         const touch = Array.from(e.touches)[0];
         this.emitEvent(fnName, e, touch);
@@ -247,7 +352,7 @@ class Scroll {
 
         // 缓冲动画
         this.mark.inertialMotion.time.touch = e.timeStamp;
-        this.stretch.radId !== null && cancelAnimationFrame(this.stretch.radId)
+        this.stretch.radId !== null && cancelAnimationFrame(this.stretch.radId);
     }
 
     initTouchStart() {
@@ -264,27 +369,37 @@ class Scroll {
 
             moveValue = +this.mark.scroll.curTranslate + moveNum;
 
-            // 边缘回弹
-            // 十字相乘，当前剩余可滑动距离 / 猴皮筋强度 / 当前剩余可滑动距离  = 想要的距离结果 / 这次和上次滑动距离的差
-            if (this.mark.scroll.curTranslate > 0) {
-                const restDist =
-                    this.stretch.max - this.mark.scroll.curTranslate;
+            if (this.mark.bounce) {
+                // 边缘回弹
+                // 十字相乘，当前剩余可滑动距离 / 猴皮筋强度 / 当前剩余可滑动距离  = 想要的距离结果 / 这次和上次滑动距离的差
+                if (this.mark.scroll.curTranslate > 0) {
+                    const restDist =
+                        this.stretch.max - this.mark.scroll.curTranslate;
 
-                moveValue =
-                    this.mark.scroll.curTranslate +
-                    restDist / this.stretch.strength * moveNum / restDist;
+                    moveValue =
+                        this.mark.scroll.curTranslate +
+                        restDist / this.stretch.strength * moveNum / restDist;
+                } else if (
+                    this.mark.scroll.curTranslate < this.stretch.bottomScrollMax
+                ) {
+                    const restDist =
+                        this.stretch.bottomScrollMax -
+                        this.mark.scroll.curTranslate;
 
-            } else if (this.mark.scroll.curTranslate < this.stretch.bottomScrollMax) {
-                const restDist =
-                    this.stretch.bottomScrollMax - this.mark.scroll.curTranslate
+                    moveValue =
+                        this.mark.scroll.curTranslate +
+                        restDist / this.stretch.strength * moveNum / restDist;
+                }
 
-                moveValue =
-                    this.mark.scroll.curTranslate +
-                    restDist / this.stretch.strength * moveNum / restDist;
+                this.mark.scroll.touchPoiot = touch.clientY;
+                this.mark.scroll.curTranslate = moveValue;
+            } else {
+                if (moveValue > 0) {
+                    moveValue = 0;
+                } else if (moveValue < this.stretch.bottomScrollMax) {
+                    moveValue = this.stretch.bottomScrollMax;
+                }
             }
-
-            this.mark.scroll.touchPoiot = touch.clientY;
-            this.mark.scroll.curTranslate = moveValue;
 
             this.setTranslate(moveValue);
 
@@ -299,10 +414,7 @@ class Scroll {
             }
 
             if (this.mark.inertialMotion.dist.now) {
-                this.emit(
-                    'onScroll',
-                    this.returnHookArgs('scroll', e, touch)
-                );
+                this.emit('onScroll', this.returnHookArgs('scroll', e, touch));
             }
 
             // 缓冲动画
@@ -315,10 +427,14 @@ class Scroll {
 
     // 超出边界，利用自定义事件
     outOfBounds(e) {
-        const pageH = document.documentElement.clientHeight
+        const pageH = document.documentElement.clientHeight;
         const touch = Array.from(e.changedTouches)[0];
 
-        if (this.mark.scroll.curTranslate > 0 && touch.clientY > pageH || this.mark.scroll.curTranslate < this.stretch.bottomScrollMax && touch.clientY < 0) {
+        if (
+            (this.mark.scroll.curTranslate > 0 && touch.clientY > pageH) ||
+            (this.mark.scroll.curTranslate < this.stretch.bottomScrollMax &&
+                touch.clientY < 0)
+        ) {
             if (this.mark.isBounds) {
                 var event = new CustomEvent('touchend', {
                     detail: {
@@ -326,25 +442,28 @@ class Scroll {
                         e: this.mark.lastMoveE
                     }
                 });
-                window.dispatchEvent(event)
-            };
+                window.dispatchEvent(event);
+            }
         }
 
-        this.mark.lastMoveE = e
+        this.mark.lastMoveE = e;
     }
 
     initTouchMove() {
-        document.body.addEventListener('touchmove', this.outOfBounds.bind(this));
+        document.body.addEventListener(
+            'touchmove',
+            this.outOfBounds.bind(this)
+        );
         document.body.addEventListener('touchmove', this.touchMove.bind(this));
     }
 
     touchEnd(e) {
         const fnName = this.touchEnd.name;
-        let custom = e
+        let custom = e;
         if (e.detail.outof) {
-            custom = e.detail.e
+            custom = e.detail.e;
         }
-        this.mark.isBounds = false
+        this.mark.isBounds = false;
         const touch = Array.from(custom.changedTouches)[0];
         if (this.mark.identifier === touch.identifier) {
             this.mark.identifier = null;
@@ -354,9 +473,11 @@ class Scroll {
             // 手指抬起的时候如果超过返回，则调用开始回缩
             // 回缩功能
             if (this.mark.scroll.curTranslate > 0) {
-                this.retraction(0, custom, touch)
-            } else if (this.mark.scroll.curTranslate < this.stretch.bottomScrollMax) {
-                this.retraction(this.stretch.bottomScrollMax, custom, touch)
+                this.retraction(0, custom, touch);
+            } else if (
+                this.mark.scroll.curTranslate < this.stretch.bottomScrollMax
+            ) {
+                this.retraction(this.stretch.bottomScrollMax, custom, touch);
             } else {
                 // 缓冲动画
                 if (custom.timeStamp - this.mark.inertialMotion.time.now < 30) {
@@ -365,11 +486,11 @@ class Scroll {
                         this.mark.inertialMotion.time.last;
                     const dist = Math.abs(
                         this.mark.inertialMotion.dist.now -
-                        this.mark.inertialMotion.dist.last
+                            this.mark.inertialMotion.dist.last
                     );
                     // 速度
                     this.mark.inertialMotion.speed = Math.min(
-                        (dist / (time / 1000) / 40),
+                        dist / (time / 1000) / 40,
                         50
                     );
 
@@ -377,52 +498,91 @@ class Scroll {
                     this.mark.inertialMotion.dir =
                         this.mark.inertialMotion.dist.now -
                             this.mark.inertialMotion.dist.last >
-                            0
+                        0
                             ? 1
                             : -1;
 
                     this.mark.inertialMotion.dist.now = 0;
 
                     const fn = () => {
-                        if (this.mark.scroll.curTranslate > this.stretch.scrollMax) {
-                            this.mark.inertialMotion.speed = 0
-                            this.retraction(0, e, touch)
-                        } else if (this.mark.scroll.curTranslate < this.stretch.bottomScrollMax - this.stretch.scrollMax) {
-                            this.mark.inertialMotion.speed = 0
-                            this.retraction(this.stretch.bottomScrollMax, e, touch)
-
+                        if (
+                            this.mark.scroll.curTranslate >
+                                this.stretch.scrollMax &&
+                            this.mark.bounce
+                        ) {
+                            this.mark.inertialMotion.speed = 0;
+                            this.retraction(0, e, touch);
+                        } else if (
+                            this.mark.scroll.curTranslate <
+                                this.stretch.bottomScrollMax -
+                                    this.stretch.scrollMax &&
+                            this.mark.bounce
+                        ) {
+                            this.mark.inertialMotion.speed = 0;
+                            this.retraction(
+                                this.stretch.bottomScrollMax,
+                                e,
+                                touch
+                            );
                         } else {
                             this.setTranslate(
-                                +this.mark.scroll.curTranslate +
-                                this.mark.inertialMotion.speed *
-                                this.mark.inertialMotion.dir
+                                this.mark.scroll.curTranslate +
+                                    this.mark.inertialMotion.speed *
+                                        this.mark.inertialMotion.dir
                             );
                             if (this.mark.inertialMotion.speed > 0) {
+                                if (!this.mark.bounce) {
+                                    if (this.getTranslate() > 0) {
+                                        this.mark.inertialMotion.speed = 0;
+                                        this.setTranslate(0);
+                                        this.mark.scroll.curTranslate = this.getTranslate();
+                                    } else if (
+                                        this.getTranslate() <
+                                        this.stretch.bottomScrollMax
+                                    ) {
+                                        this.mark.inertialMotion.speed = 0;
+                                        this.setTranslate(
+                                            this.stretch.bottomScrollMax
+                                        );
+                                        this.mark.scroll.curTranslate = this.getTranslate();
+                                    }
+                                }
                                 this.mark.inertialMotion.speed -= Math.ceil(
                                     this.mark.inertialMotion.speed /
-                                    this.mark.inertialMotion.a
+                                        this.mark.inertialMotion.a
                                 );
                                 this.mark.scroll.curTranslate = this.getTranslate();
                                 this.emit(
                                     'onScroll',
                                     this.returnHookArgs('scroll', e, touch)
                                 );
-                                requestAnimationFrame(fn);
-                            } else {
-                                if (this.mark.scroll.curTranslate > 0) {
-                                    this.mark.inertialMotion.speed = 0
-                                    this.retraction(0, e, touch)
-                                } else if (this.mark.scroll.curTranslate < this.stretch.bottomScrollMax) {
-                                    this.mark.inertialMotion.speed = 0
-                                    this.retraction(this.stretch.bottomScrollMax, e, touch)
+                                this.barScroll();
 
+                                requestAnimationFrame(fn);
+                            } else if (this.mark.bounce) {
+                                if (this.mark.scroll.curTranslate > 0) {
+                                    this.mark.inertialMotion.speed = 0;
+                                    this.retraction(0, e, touch);
+                                } else if (
+                                    this.mark.scroll.curTranslate <
+                                    this.stretch.bottomScrollMax
+                                ) {
+                                    this.mark.inertialMotion.speed = 0;
+                                    this.retraction(
+                                        this.stretch.bottomScrollMax,
+                                        e,
+                                        touch
+                                    );
                                 } else {
                                     this.emit(
                                         'onScrollEnd',
-                                        this.returnHookArgs('scrollend', e, touch)
+                                        this.returnHookArgs(
+                                            'scrollend',
+                                            e,
+                                            touch
+                                        )
                                     );
                                 }
-
                             }
                         }
                     };
@@ -442,9 +602,37 @@ class Scroll {
         window.addEventListener('touchend', this.touchEnd.bind(this));
         window.addEventListener('touchcancel', this.touchEnd.bind(this));
     }
+
+    destroy() {
+        this.wrap.removeEventListener('touchstart', this.touchStart.bind(this));
+        document.body.removeEventListener(
+            'touchmove',
+            this.outOfBounds.bind(this)
+        );
+        document.body.removeEventListener(
+            'touchmove',
+            this.touchMove.bind(this)
+        );
+        window.removeEventListener('touchend', this.touchEnd.bind(this));
+        window.removeEventListener('touchcancel', this.touchEnd.bind(this));
+
+        // 滚动条
+        if (this.mark.scrollbars) {
+            document.body.removeEventListener(
+                'touchmove',
+                this.barScroll.bind(this)
+            );
+        }
+    }
 }
 
-const scroll = new Scroll('.wrap');
+const scroll = new Scroll('.wrap', {
+    direction: 'horizontal',
+    bounce: true,
+    scrollbars: false,
+    smooth: 40,
+    pullForce: 4
+});
 
 scroll.on('onTouchStart', args => {
     // console.log('touchstart');
@@ -464,8 +652,4 @@ scroll.on('onScroll', args => {
 });
 scroll.on('onScrollEnd', args => {
     // console.log('滚动   ==结束');
-});
-
-scroll.on('onRefresh', () => {
-    console.log('刷新完成');
 });

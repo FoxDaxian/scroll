@@ -28,7 +28,7 @@ const webpackConfig = {
     ],
     resolve: {
         alias: {
-            sass: path.resolve(__dirname, '../src/scss')
+            scss: path.resolve(__dirname, '../src/scss')
         }
     }
 };

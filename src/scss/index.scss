@@ -1,0 +1,19 @@
+::-webkit-scrollbar {
+    display: none;
+}
+
+::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+.easybar {
+    position: absolute;
+    width: 2px;
+    background-color: #c1c1c1;
+    border-radius: 14px;
+    top: 0;
+    right: 1px;
+}
+.hidden {
+    display: none;
+}

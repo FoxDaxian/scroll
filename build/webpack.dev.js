@@ -2,7 +2,7 @@
  * @Author: fox 
  * @Date: 2018-04-22 13:02:42 
  * @Last Modified by: fox
- * @Last Modified time: 2018-05-03 16:24:01
+ * @Last Modified time: 2018-05-07 13:44:16
  */
 import webpack from 'webpack';
 import debug from 'debug';
@@ -96,7 +96,7 @@ app.get('*', (req, res) => {
         }
         res.end(mfs.readFileSync(outpathPath + req.path));
     } catch (e) {
-        log(e);
+        log(e, '=====', req.path);
         res.set({
             'Content-Type': 'text/plain;charset=UTF-8'
         });
@@ -124,9 +124,14 @@ compiler.watch(
             // 对比决定是否reoad
             if (
                 lastChunkHash.length === 0 ||
-                compilerRes.chunks.every(
-                    (chunk, index) => chunk.hash !== lastChunkHash[index].hash
-                )
+                compilerRes.chunks.some((chunk, index) => {
+                    return (
+                        chunk.hash !== lastChunkHash[index].hash ||
+                        chunk.files.some((fileName, i) => {
+                            return fileName !== lastChunkHash[index].files[i];
+                        })
+                    );
+                })
             ) {
                 io.emit('reload');
                 clear();
