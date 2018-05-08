@@ -2,7 +2,7 @@
  * @Author: fox 
  * @Date: 2018-04-22 13:02:42 
  * @Last Modified by: fox
- * @Last Modified time: 2018-05-07 13:44:16
+ * @Last Modified time: 2018-05-08 17:30:58
  */
 import webpack from 'webpack';
 import debug from 'debug';
@@ -83,7 +83,11 @@ compiler.outputFileSystem = mfs;
 
 const outpathPath = compiler.options.output.path;
 app.get('/', (req, res) => {
-    res.setHeader('Content-Type', 'text/html');
+    res.set({
+        'Content-Type': 'text/html',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Credentials': true
+    });
     res.end(mfs.readFileSync(path.resolve(outpathPath, 'index.html')));
 });
 

@@ -15,7 +15,7 @@ const webpackConfig = {
         rules: [
             {
                 test: /\.js$/,
-                exclude: path.resolve(__dirname, 'node_modules'),
+                exclude: path.resolve(__dirname, '../node_modules'),
                 use: ['happypack/loader?id=babel']
             }
         ]

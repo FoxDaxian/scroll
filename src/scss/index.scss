@@ -11,13 +11,21 @@
 	overflow: hidden;
 	position: relative;
 }
-.easybar {
+.easybary {
     position: absolute;
     width: 2px;
     background-color: #c1c1c1;
     border-radius: 14px;
     top: 0;
     right: 1px;
+}
+.easybarx {
+    position: absolute;
+	height: 2px;
+    background-color: #c1c1c1;
+    border-radius: 14px;
+    bottom: 1px;
+    left: 0px;
 }
 .hidden {
     display: none;
