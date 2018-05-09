@@ -9,12 +9,15 @@
 - [x] 销毁所有事件
 - [x] 可配置滚动条
 - [x] 配置参数, 不多就几个 
-- [x] 自由方向滚动
+- [x] 水平垂直方向滚动
+- [x] 防抖
 - [ ] scrollTo 滚动到某位置 scrollBy 相对于当前位置 滚动多少距离 scrollToElement 滚动到某元素
-- [ ] 代码操控, 加入主动触发touchend
 - [ ] 更友好的错误提示信息
 - [x] touchend不会触发的问题，目前原因未知，解决办法是主动触发touchend
-- [x] 默认高度为html高度，需手动设置高
+
+
+默认高度为html高度，需手动设置高
+建议用一个元素包裹起来所有的元素，方便布局
 
 需 解决闲七杂八兼容问题
 https://blog.csdn.net/yhb241/article/details/47447337 这个问题
@@ -23,4 +26,3 @@ http://www.cnblogs.com/baihuaxiu/p/6654496.html
 
 
 
-- [ ] 移动端 事件对象中的 时间戳 居然不一致。。。。
