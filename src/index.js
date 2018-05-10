@@ -16,8 +16,8 @@
 import { throttle } from '../tools/jstool';
 import 'scss/index.scss';
 
-const noop = function() {};
-const throwError = function() {
+const noop = function () { };
+const throwError = function () {
     throw new Error('please pass the arguments, even empth objects');
 };
 class Scroll {
@@ -112,12 +112,12 @@ class Scroll {
             smooth = 40, //惯性运动光滑，越小摩擦力越大
             pullForce = 4 // 边缘牵扯力，越大越难拉
         } = {
-            direction: 'vertical',
-            bounce: true,
-            scrollbars: false,
-            smooth: 40, //惯性运动光滑，越小摩擦力越大
-            pullForce: 4 // 边缘牵扯力，越大越难拉
-        }
+                direction: 'vertical',
+                bounce: true,
+                scrollbars: false,
+                smooth: 40, //惯性运动光滑，越小摩擦力越大
+                pullForce: 4 // 边缘牵扯力，越大越难拉
+            }
     ) {
         try {
             el = el.nodeType ? el : document.body.querySelector(el);
@@ -298,16 +298,16 @@ class Scroll {
         var supportsPassive = false;
         try {
             var opts = Object.defineProperty({}, 'passive', {
-                get: function() {
+                get: function () {
                     supportsPassive = true;
                 }
             });
             window.addEventListener('test', null, opts);
-        } catch (e) {}
+        } catch (e) { }
 
         document.body.addEventListener(
             'touchmove',
-            function(e) {
+            function (e) {
                 e.preventDefault();
             },
             supportsPassive ? { passive: false } : false
@@ -331,7 +331,7 @@ class Scroll {
             fragment.appendChild(forWxBox);
             document.body.appendChild(fragment);
 
-            forWxBox.addEventListener('touchmove', function(e) {
+            forWxBox.addEventListener('touchmove', function (e) {
                 e.preventDefault();
             });
         }
@@ -466,7 +466,10 @@ class Scroll {
         this.mark.scroll.curTranslate = 0;
         this.mark.inertialMotion.dist.now = 0;
         this.mark.inertialMotion.speed = 0;
-        this.setTranslate();
+        this.emit('setCoordinate', {
+            x: 0,
+            y: 0
+        });
         this.emit('onRefresh');
     }
 
@@ -617,7 +620,7 @@ class Scroll {
                         this.mark.inertialMotion.time.last;
                     const dist = Math.abs(
                         this.mark.inertialMotion.dist.now -
-                            this.mark.inertialMotion.dist.last
+                        this.mark.inertialMotion.dist.last
                     );
                     // 速度
                     this.mark.inertialMotion.speed = Math.min(
@@ -629,7 +632,7 @@ class Scroll {
                     this.mark.inertialMotion.dir =
                         this.mark.inertialMotion.dist.now -
                             this.mark.inertialMotion.dist.last >
-                        0
+                            0
                             ? 1
                             : -1;
 
@@ -638,15 +641,15 @@ class Scroll {
                     const fn = () => {
                         if (
                             this.mark.scroll.curTranslate >
-                                this.stretch.scrollMax &&
+                            this.stretch.scrollMax &&
                             this.mark.bounce
                         ) {
                             this.mark.inertialMotion.speed = 0;
                             this.retraction(0, e, touch);
                         } else if (
                             this.mark.scroll.curTranslate <
-                                this.stretch.stretchMax -
-                                    this.stretch.scrollMax &&
+                            this.stretch.stretchMax -
+                            this.stretch.scrollMax &&
                             this.mark.bounce
                         ) {
                             this.mark.inertialMotion.speed = 0;
@@ -655,7 +658,7 @@ class Scroll {
                             let moveValue =
                                 this.mark.scroll.curTranslate +
                                 this.mark.inertialMotion.speed *
-                                    this.mark.inertialMotion.dir;
+                                this.mark.inertialMotion.dir;
 
                             this.mark.inertialMotion.speed -=
                                 this.mark.inertialMotion.speed /
@@ -780,10 +783,13 @@ class Scroll {
             let time = (+new Date() - startTime) / 1000;
             time > duration && (time = duration);
             const dist = v0 * time - 0.5 * a * time * time;
-            this.mark.scroll[this.opt.dir] = condition
+            const moveValue = condition
                 ? start + dist
                 : start - dist;
-            this.setTranslate();
+            this.emit('setCoordinate', {
+                x: this.mark.isVertical ? this.mark.scroll.x : moveValue,
+                y: this.mark.isVertical ? moveValue : this.mark.scroll.y
+            });
             this.mark.scroll.curTranslate = this.getTranslate();
 
             this.emit('onScroll', this.returnHookArgs('scroll'));
