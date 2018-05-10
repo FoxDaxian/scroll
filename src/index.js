@@ -2,7 +2,7 @@
  * @Author: fox 
  * @Date: 2018-05-03 11:07:37 
  * @Last Modified by: fox
- * @Last Modified time: 2018-05-10 15:55:03
+ * @Last Modified time: 2018-05-10 19:46:58
  */
 
 // touchstart:		手指触摸到一个 DOM 元素时触发。
@@ -79,11 +79,6 @@ class Scroll {
         setBarTranslate: []
     };
 
-    device = {
-        screenH: window.screen.height,
-        screenW: window.screen.width
-    };
-
     // 边缘伸缩部分
     stretch = {
         scrollMax: 100,
@@ -109,7 +104,7 @@ class Scroll {
     };
 
     constructor(
-        classname,
+        el,
         {
             direction = 'vertical',
             bounce = true,
@@ -125,6 +120,10 @@ class Scroll {
         }
     ) {
         try {
+            el = el.nodeType ? el : document.body.querySelector(el);
+            if (!el) {
+                throw 'please pass the correct element';
+            }
             this.i = 0;
             this.mark.direction = direction;
             this.mark.scrollbars = scrollbars;
@@ -133,7 +132,8 @@ class Scroll {
             this.stretch.strength = pullForce;
 
             this.wrapBox = null;
-            this.wrap = document.querySelector(classname);
+
+            this.wrap = el;
             this.wrap.classList.add('easywrap');
             this.preventNativeScroll();
             this.wrapAll();
@@ -203,7 +203,7 @@ class Scroll {
                 this.wrapBox[this.opt.offsetSize] -
                 this.wrap[this.opt.offsetSize];
         } catch (e) {
-            console.log(e, '===');
+            throw e;
         }
     }
 
@@ -593,7 +593,10 @@ class Scroll {
             this.mark.identifier = null;
             this.emitEvent('touchEnd', custom, touch);
             this.mark.scroll.curTranslate = this.getTranslate();
-            if (!this.bar.el.classList.contains('hidden')) {
+            if (
+                this.mark.scrollbars &&
+                !this.bar.el.classList.contains('hidden')
+            ) {
                 this.bar.el.classList.toggle('hidden');
             }
 
@@ -789,7 +792,7 @@ class Scroll {
             } else {
                 this.emit('onScrollEnd', this.returnHookArgs('scrollend'));
                 this.operate.radId = null;
-                callback(this.getTranslate());
+                callback();
             }
         };
         this.operate.radId = requestAnimationFrame(fn);
@@ -832,30 +835,4 @@ class Scroll {
     }
 }
 
-const scroll = new Scroll('.wrap', {
-    direction: 'vertical',
-    bounce: true,
-    scrollbars: true,
-    smooth: 40,
-    pullForce: 4
-});
-
-scroll.on('onTouchStart', args => {
-    // console.log('touchstart');
-});
-scroll.on('onTouchMove', args => {
-    // console.log('touchmove 中');
-});
-scroll.on('onTouchEnd', args => {
-    // console.log('touchend结束了');
-});
-
-scroll.on('onScrollStart', args => {
-    // console.log('滚动   ==开始');
-});
-scroll.on('onScroll', args => {
-    // console.log('滚动   ==中');
-});
-scroll.on('onScrollEnd', args => {
-    // console.log('滚动   ==结束');
-});
+module.exports = Scroll;

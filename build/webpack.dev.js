@@ -2,7 +2,7 @@
  * @Author: fox 
  * @Date: 2018-04-22 13:02:42 
  * @Last Modified by: fox
- * @Last Modified time: 2018-05-08 17:30:58
+ * @Last Modified time: 2018-05-10 17:48:13
  */
 import webpack from 'webpack';
 import debug from 'debug';
@@ -68,7 +68,7 @@ const devConf = merge(defaultConf, {
     },
     plugins: [
         new webpack.DefinePlugin({
-            'process.env.NODE_ENV': JSON.stringify('dev')
+            'process.env.NODE_ENV': JSON.stringify('developer')
         }),
         new HappyPack({
             id: 'scss',

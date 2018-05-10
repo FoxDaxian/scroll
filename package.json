@@ -1,50 +1,53 @@
 {
-  "name": "scroll",
-  "version": "1.3.1",
-  "main": "index.js",
-  "repository": "https://github.com/a13821190779/scroll.git",
-  "author": "a13821190779 <945039036@qq.com>",
-  "license": "MIT",
-  "scripts": {
-    "dev": "cross-env DEBUG=console.* babel-node ./build/webpack.dev.js",
-    "release": "standard-version && git push"
-  },
-  "husky": {
-    "hooks": {
-      "commit-msg": "commitlint -e $GIT_PARAMS"
+    "name": "scroll",
+    "version": "1.3.1",
+    "main": "./dist/static/bundle.js",
+    "repository": "https://github.com/a13821190779/scroll.git",
+    "author": "a13821190779 <945039036@qq.com>",
+    "license": "MIT",
+    "scripts": {
+        "dev": "cross-env DEBUG=console.* babel-node ./build/webpack.dev.js",
+        "build": "cross-env DEBUG=console.* babel-node ./build/webpack.prod.js",
+        "release": "standard-version && git push"
+    },
+    "husky": {
+        "hooks": {
+            "commit-msg": "commitlint -e $GIT_PARAMS"
+        }
+    },
+    "dependencies": {
+        "babel-runtime": "^6.26.0",
+        "cheerio": "^1.0.0-rc.2",
+        "config": "^1.30.0",
+        "express": "^4.16.3",
+        "socket.io": "^2.1.0",
+        "webpack": "^3.6.0",
+        "webpack-merge": "^4.1.2"
+    },
+    "devDependencies": {
+        "@commitlint/cli": "^6.1.3",
+        "babel-cli": "^6.26.0",
+        "babel-loader": "^7.1.4",
+        "babel-plugin-transform-runtime": "^6.23.0",
+        "babel-preset-es2015": "^6.24.1",
+        "babel-preset-stage-2": "^6.24.1",
+        "chalk": "^2.4.1",
+        "cross-env": "^5.1.4",
+        "css-loader": "^0.28.11",
+        "debug": "^3.1.0",
+        "extract-text-webpack-plugin": "^3.0.2",
+        "happypack": "^4.0.1",
+        "html-webpack-plugin": "^3.2.0",
+        "husky": "^1.0.0-rc.2",
+        "log4js": "^2.5.3",
+        "memory-fs": "^0.4.1",
+        "node-sass": "^4.8.3",
+        "nodemon": "^1.17.3",
+        "open": "^0.0.5",
+        "rimraf": "^2.6.2",
+        "sass-loader": "^7.0.1",
+        "standard-version": "^4.3.0",
+        "style-loader": "^0.21.0",
+        "uglifyjs-webpack-plugin": "^1.2.5"
     }
-  },
-  "dependencies": {
-    "babel-runtime": "^6.26.0",
-    "cheerio": "^1.0.0-rc.2",
-    "config": "^1.30.0",
-    "express": "^4.16.3",
-    "socket.io": "^2.1.0",
-    "webpack": "^3.0.0",
-    "webpack-merge": "^4.1.2"
-  },
-  "devDependencies": {
-    "@commitlint/cli": "^6.1.3",
-    "babel-cli": "^6.26.0",
-    "babel-loader": "^7.1.4",
-    "babel-plugin-transform-runtime": "^6.23.0",
-    "babel-preset-es2015": "^6.24.1",
-    "babel-preset-stage-2": "^6.24.1",
-    "chalk": "^2.4.1",
-    "cross-env": "^5.1.4",
-    "css-loader": "^0.28.11",
-    "debug": "^3.1.0",
-    "extract-text-webpack-plugin": "^3.0.2",
-    "happypack": "^4.0.1",
-    "html-webpack-plugin": "^3.2.0",
-    "husky": "^1.0.0-rc.2",
-    "log4js": "^2.5.3",
-    "memory-fs": "^0.4.1",
-    "node-sass": "^4.8.3",
-    "nodemon": "^1.17.3",
-    "open": "^0.0.5",
-    "sass-loader": "^7.0.1",
-    "standard-version": "^4.3.0",
-    "style-loader": "^0.21.0"
-  }
 }

@@ -1,29 +1,91 @@
 # easyScroll
 
-- [x] 直接一个列表，自动添加box，然后滚动
-- [x] 速度相关操作, 拖动时间和拖动距离 构成速度
-- [x] 惯性滚动
-- [x] 触碰停止滚动
-- [x] 各种钩子,(refresh)
-- [x] 边缘回弹
-- [x] 销毁所有事件
-- [x] 可配置滚动条
-- [x] 配置参数, 不多就几个 
-- [x] 水平垂直方向滚动
-- [x] 防抖
-- [x] touchend不会触发的问题，目前原因未知，解决办法是主动触发touchend
-- [x] scrollBy or scrollTo target: 目标距离，默认0 duration 持续时间，默认1(s) callback 回调函数， 默认 空函数，参数为当前坐标
-- [x] scrollToElement  el:元素， el 或者 id 或者 class duration 持续时间，默认1(s)， callback，offset偏移量，true 元素正中间的位置
-- [ ] 更友好的错误提示信息
+### so easy!
+
+# install
+```
+    npm i easyScroll
+    or
+    yarn add easyScroll
+```
+
+# usage
+
+***notice: you'd better use the below html structure to avoid unnecessary trouble***
+
+```html
+	<div class="scrollWrap">
+		<div class='you custom wrap'>
+			<!-- content -->
+		</div>
+	</div>
+```
 
 
-默认高度为html高度，需手动设置高
-建议用两层元素包裹起来所有的元素，方便布局
 
-需 解决闲七杂八兼容问题
-https://blog.csdn.net/yhb241/article/details/47447337 这个问题
-http://www.cnblogs.com/baihuaxiu/p/6654496.html
-点击穿透问题
+```
+// const EScroll = require('easyScroll')
+import EScroll from 'easyScroll'
+new EScroll(el);
+```
 
+or 
+
+```
+<script src='这里需要cdn地址'></script>
+new EScroll(el);
+```
+
+# API
+* Class
+	
+	```
+	const scroll = new Scroll('.wrap', {
+		direction: 'vertical',
+		bounce: true,
+		scrollbars: true,
+		smooth: 40,
+		pullForce: 4
+	});
+	```
+
+first parameter can be classname、id or element
+
+second object parameter are below
+ | name       | mean                          | default  |
+ | ---------- | ----------------------------- | -------- |
+ | direction  | direction horizontal/vertical | vertical |
+ | bounce     | open bounce                   | true     |
+ | scrollbars | open scrollbars               | false    |
+ | smooth     | scroll friction               | 40       |
+ | pullForce  | rubber band pull force        | 4        |
+	
+
+* instance
+
+	```
+		scroll.refresh(): refresh all and reset scroll position
+	```
+		
+	```
+		scroll.destroy(): destory all event
+	```
+	
+	```
+		scroll.on(eventName, cb): a monitor, the eventName can be the following: onTouchStart onTouchMove onTouchEnd onScrollStart onScroll onScrollEnd onRefresh. the cb is callback, has one parameter, is object and has type, x, y
+	```
+	
+	```
+		scroll.scrollTo({target, duration, callback}): scroll to the ${target} position at ${duration(default 1s)} second, once it arrives, trigger ${callback} function, ${duration} are seconds as a unit
+	```
+	
+	```
+		scroll.scrollBy({target, duration, callback}): from now position, scroll  to the ${target} position relative to the current position at ${duration(default 1s)} second, once it arrives, trigger ${callback} function, ${duration} are seconds as a unit
+	```
+	
+	```
+		scroll.scrollToElement({el, offset, duration, callback}): scroll to the ${el} left vertices, you can assign the ${offset} to precisely control the position, when ${offset} is true, will be scroll to ${el} center location. the remaining parameters are the same as above
+	```
+	
 
 

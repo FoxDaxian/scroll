@@ -1,8 +1,8 @@
-var windows = process.platform.indexOf('win') === 0;
+const windows = process.platform.indexOf('win') === 0;
 
 function clear() {
-    var i, lines;
-    var stdout = '';
+    const i, lines;
+    const stdout = '';
 
     if (windows === false) {
         stdout += '\x1B[2J';
