@@ -2,7 +2,7 @@
  * @Author: fox 
  * @Date: 2018-05-03 11:07:37 
  * @Last Modified by: fox
- * @Last Modified time: 2018-05-09 19:54:24
+ * @Last Modified time: 2018-05-10 15:55:03
  */
 
 // touchstart:		手指触摸到一个 DOM 元素时触发。
@@ -16,6 +16,10 @@
 import { throttle } from '../tools/jstool';
 import 'scss/index.scss';
 
+const noop = function() {};
+const throwError = function() {
+    throw new Error('please pass the arguments, even empth objects');
+};
 class Scroll {
     mark = {
         isVertical: true,
@@ -51,8 +55,16 @@ class Scroll {
         lastMoveE: null
     };
 
+    operate = {
+        radId: null
+    };
+
     opt = {
-        offsetSize: 'offsetHeight'
+        offsetSize: 'offsetHeight',
+        rule: 'height',
+        clientSize: 'clientHeight',
+        clientDir: 'clientY',
+        dir: 'y'
     };
 
     eventQueue = {
@@ -153,6 +165,15 @@ class Scroll {
             this.initTouchEnd();
 
             this.mark.isVertical = this.mark.direction === 'vertical';
+            if (!this.mark.isVertical) {
+                this.opt = {
+                    rule: 'width',
+                    offsetSize: 'offsetWidth',
+                    clientSize: 'clientWidth',
+                    clientDir: 'clientX',
+                    dir: 'x'
+                };
+            }
             this.opt = {
                 rule: this.mark.isVertical ? 'height' : 'width',
                 offsetSize: this.mark.isVertical
@@ -161,7 +182,8 @@ class Scroll {
                 clientSize: this.mark.isVertical
                     ? 'clientHeight'
                     : 'clientWidth',
-                clientDir: this.mark.isVertical ? 'clientY' : 'clientX'
+                clientDir: this.mark.isVertical ? 'clientY' : 'clientX',
+                dir: this.mark.isVertical ? 'y' : 'x'
             };
 
             if (
@@ -318,7 +340,6 @@ class Scroll {
     // 获取滑动距离
     getTranslate() {
         const arr = this.wrapBox.style.transform.match(/-?[\d\.]+/g);
-
         return this.mark.isVertical ? ~~arr[1] : ~~arr[0];
     }
 
@@ -373,11 +394,11 @@ class Scroll {
     }
 
     // 返回钩子函数的参数
-    returnHookArgs(name, e, touch) {
+    returnHookArgs(name) {
         const options = {
             type: name,
-            x: Math.round(this.getTranslate() * 1000) / 1000,
-            y: Math.round(this.getTranslate() * 1000) / 1000
+            x: this.mark.scroll.x,
+            y: this.mark.scroll.y
         };
         return options;
     }
@@ -389,10 +410,10 @@ class Scroll {
         });
     }
 
-    emitEvent = (fnName, e, touch) => {
+    emitEvent = fnName => {
         this.emit(
             `on${this.UpperFristCase(fnName)}`,
-            this.returnHookArgs(fnName.toLocaleLowerCase(), e, touch)
+            this.returnHookArgs(fnName.toLocaleLowerCase())
         );
     };
 
@@ -428,16 +449,13 @@ class Scroll {
                     y: this.mark.isVertical ? moveValue : this.mark.scroll.y
                 });
 
-                this.emit('onScroll', this.returnHookArgs('scroll', e, touch));
+                this.emit('onScroll', this.returnHookArgs('scroll'));
 
                 this.mark.scroll.curTranslate = moveValue;
                 this.stretch.radId = requestAnimationFrame(stretchFn);
                 if (moveValue === aimTranslate || moveValue === 0) {
                     this.mark.inertialMotion.dist.now = 0;
-                    this.emit(
-                        'onScrollEnd',
-                        this.returnHookArgs('scrollend', e, touch)
-                    );
+                    this.emit('onScrollEnd', this.returnHookArgs('scrollend'));
                 }
             }
         };
@@ -460,6 +478,7 @@ class Scroll {
         this.mark.inertialMotion.speed = 0;
         this.mark.inertialMotion.time.touch = e.timeStamp;
         this.stretch.radId !== null && cancelAnimationFrame(this.stretch.radId);
+        this.operate.radId !== null && cancelAnimationFrame(this.operate.radId);
         this.mark.scroll.touchPoint = touch[this.opt.clientDir];
     }
 
@@ -518,14 +537,11 @@ class Scroll {
 
             // 钩子函数部分
             if (!this.mark.inertialMotion.dist.now) {
-                this.emit(
-                    'onScrollStart',
-                    this.returnHookArgs('scrollstart', e, touch)
-                );
+                this.emit('onScrollStart', this.returnHookArgs('scrollstart'));
             }
 
             if (this.mark.inertialMotion.dist.now) {
-                this.emit('onScroll', this.returnHookArgs('scroll', e, touch));
+                this.emit('onScroll', this.returnHookArgs('scroll'));
             }
 
             // 缓冲动画
@@ -687,7 +703,7 @@ class Scroll {
                                 this.mark.scroll.curTranslate = this.getTranslate();
                                 this.emit(
                                     'onScroll',
-                                    this.returnHookArgs('scroll', e, touch)
+                                    this.returnHookArgs('scroll')
                                 );
 
                                 requestAnimationFrame(fn);
@@ -700,11 +716,7 @@ class Scroll {
                                     this.mark.inertialMotion.dist.now = 0;
                                     this.emit(
                                         'onScrollEnd',
-                                        this.returnHookArgs(
-                                            'scrollend',
-                                            e,
-                                            touch
-                                        )
+                                        this.returnHookArgs('scrollend')
                                     );
                                 }
                             }
@@ -716,7 +728,7 @@ class Scroll {
                         this.mark.inertialMotion.dist.now = 0;
                         this.emit(
                             'onScrollEnd',
-                            this.returnHookArgs('scrollend', e, touch)
+                            this.returnHookArgs('scrollend')
                         );
                     }
                 }
@@ -747,40 +759,76 @@ class Scroll {
         };
     }
 
-    scrollTo(
-        { x = this.mark.scroll.x, y = this.mark.scroll.y } = {
-            x: this.throwError(),
-            y: this.throwError()
+    easeOut(
+        { target = 0, duration = 1, callback = noop } = {
+            target: throwError()
         }
     ) {
-        x = Math.abs(x);
-        y = Math.abs(y);
+        const start = this.mark.scroll[this.opt.dir];
+        const condition = target > 0;
+        target = Math.abs(target);
         const startTime = +new Date();
-        const t = 2;
-        let v0 = 300;
-        const a = 2 * (y - v0 * t) / (t * t);
-        console.log(a);
+        // 假设初速度为0，单纯求加速度
+        // s = Vot + a * t * t / 2
+        const a = 2 * target / Math.pow(duration, 2);
+        // 2as = Math.pow(vt,2) - Math.pow(v0,2)
+        const v0 = Math.sqrt(2 * a * target);
         const fn = () => {
             let time = (+new Date() - startTime) / 1000;
-            time > 5 && (time = 5);
-            const dist = v0 * time + 0.5 * a * time * time;
-            // console.log(v0, '速度');
-            // console.log(dist, '距离');
-            this.mark.scroll.y = dist;
+            time > duration && (time = duration);
+            const dist = v0 * time - 0.5 * a * time * time;
+            this.mark.scroll[this.opt.dir] = condition
+                ? start + dist
+                : start - dist;
             this.setTranslate();
-            if (time < t) {
-                requestAnimationFrame(fn);
+            this.mark.scroll.curTranslate = this.getTranslate();
+
+            this.emit('onScroll', this.returnHookArgs('scroll'));
+            if (time < duration) {
+                this.operate.radId = requestAnimationFrame(fn);
+            } else {
+                this.emit('onScrollEnd', this.returnHookArgs('scrollend'));
+                this.operate.radId = null;
+                callback(this.getTranslate());
             }
         };
-        requestAnimationFrame(fn);
+        this.operate.radId = requestAnimationFrame(fn);
     }
 
-    scrollBy() {}
+    scrollBy(opt) {
+        if (!this.operate.radId) {
+            this.easeOut(opt);
+        }
+    }
 
-    scrollToElement() {}
+    scrollTo(opt) {
+        opt.target = opt.target - this.mark.scroll[this.opt.dir];
+        if (!this.operate.radId) {
+            this.easeOut(opt);
+        }
+    }
 
-    throwError() {
-        throw new Error('please pass the arguments, even empth objects');
+    // offsetX 和 offsetY定义像素级的偏移量，所以你可以滚动到元素并且加上特别的偏移量。但并不仅限于此。如果把这两个参数设置为true，元素将会位于屏幕的中间。
+
+    scrollToElement(opt) {
+        let { el, offset } = opt;
+        el = el.nodeType ? el : this.wrap.querySelector(el);
+        if (!el) {
+            return;
+        }
+        offset =
+            typeof offset === 'boolean'
+                ? offset
+                    ? el[this.opt.offsetSize] / 2
+                    : 0
+                : isNaN(parseInt(offset))
+                    ? 0
+                    : parseInt(offset);
+
+        opt.target = -el.offsetTop - offset;
+        if (!this.operate.radId) {
+            this.scrollTo(opt);
+        }
     }
 }
 
@@ -791,10 +839,7 @@ const scroll = new Scroll('.wrap', {
     smooth: 40,
     pullForce: 4
 });
-scroll.scrollTo({
-    x: 0,
-    y: 200
-});
+
 scroll.on('onTouchStart', args => {
     // console.log('touchstart');
 });

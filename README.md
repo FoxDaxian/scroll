@@ -11,13 +11,14 @@
 - [x] 配置参数, 不多就几个 
 - [x] 水平垂直方向滚动
 - [x] 防抖
-- [ ] scrollTo 滚动到某位置 scrollBy 相对于当前位置 滚动多少距离 scrollToElement 滚动到某元素
-- [ ] 更友好的错误提示信息
 - [x] touchend不会触发的问题，目前原因未知，解决办法是主动触发touchend
+- [x] scrollBy or scrollTo target: 目标距离，默认0 duration 持续时间，默认1(s) callback 回调函数， 默认 空函数，参数为当前坐标
+- [x] scrollToElement  el:元素， el 或者 id 或者 class duration 持续时间，默认1(s)， callback，offset偏移量，true 元素正中间的位置
+- [ ] 更友好的错误提示信息
 
 
 默认高度为html高度，需手动设置高
-建议用一个元素包裹起来所有的元素，方便布局
+建议用两层元素包裹起来所有的元素，方便布局
 
 需 解决闲七杂八兼容问题
 https://blog.csdn.net/yhb241/article/details/47447337 这个问题
