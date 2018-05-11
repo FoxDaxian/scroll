@@ -1,7 +1,7 @@
 {
   "name": "miniscroll",
   "version": "1.0.3",
-  "main": "./dist/static/bundle.js",
+  "main": "./dist/static/miniScroll.js",
   "repository": "https://github.com/a13821190779/scroll.git",
   "author": "a13821190779 <945039036@qq.com>",
   "license": "MIT",
@@ -20,6 +20,7 @@
     "cheerio": "^1.0.0-rc.2",
     "config": "^1.30.0",
     "express": "^4.16.3",
+    "miniscroll": "^1.0.3",
     "socket.io": "^2.1.0",
     "webpack": "^3.6.0",
     "webpack-merge": "^4.1.2"
