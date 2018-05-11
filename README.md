@@ -25,16 +25,16 @@ html
 
 
 ```
-// const EScroll = require('miniscroll')
-import EScroll from 'miniscroll'
-new EScroll(el);
+// const scroll = require('miniscroll')
+import scroll from 'miniscroll'
+new scroll(el);
 ```
 
 or 
 
 ```
 <script src='http://oqvlh6ipq.bkt.clouddn.com/miniScroll.js'></script>
-new EScroll(el);
+new miniScroll(el);
 ```
 
 # API

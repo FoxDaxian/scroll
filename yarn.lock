@@ -4471,6 +4471,19 @@ miniscroll@^1.0.3:
     webpack "^3.6.0"
     webpack-merge "^4.1.2"
 
+miniscroll@^1.0.4:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/miniscroll/-/miniscroll-1.0.4.tgz#5032034ce8c5635fc541df79c30b88fbc1b7be5f"
+  dependencies:
+    babel-runtime "^6.26.0"
+    cheerio "^1.0.0-rc.2"
+    config "^1.30.0"
+    express "^4.16.3"
+    miniscroll "^1.0.3"
+    socket.io "^2.1.0"
+    webpack "^3.6.0"
+    webpack-merge "^4.1.2"
+
 mississippi@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/mississippi/-/mississippi-2.0.0.tgz#3442a508fafc28500486feea99409676e4ee5a6f"
