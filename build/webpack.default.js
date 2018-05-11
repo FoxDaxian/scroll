@@ -8,7 +8,7 @@ const outputPath = path.resolve(__dirname, '../dist');
 const webpackConfig = {
     entry,
     output: {
-        filename: './static/bundle.js',
+        filename: './static/miniScroll.js',
         path: outputPath
     },
     module: {

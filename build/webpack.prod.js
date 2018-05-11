@@ -2,7 +2,7 @@
  * @Author: fox 
  * @Date: 2018-05-10 17:18:16 
  * @Last Modified by: fox
- * @Last Modified time: 2018-05-11 11:01:42
+ * @Last Modified time: 2018-05-11 12:06:03
  */
 
 import webpack from 'webpack';
@@ -26,7 +26,7 @@ const log = debug('console.log: ');
 const devConf = merge(defaultConf, {
     devtool: 'source-map',
     output: {
-        library: 'EScroll',
+        library: 'miniScroll',
         libraryTarget: 'umd'
     },
     module: {
