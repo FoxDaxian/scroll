@@ -1,12 +1,12 @@
-# escroll
+# miniscroll
 
 ### so easy!
 
 # install
 ```
-npm i escroll
+npm i miniscroll
 or
-yarn add escroll
+yarn add miniscroll
 ```
 
 # usage
@@ -25,8 +25,8 @@ html
 
 
 ```
-// const EScroll = require('escroll')
-import EScroll from 'escroll'
+// const EScroll = require('miniscroll')
+import EScroll from 'miniscroll'
 new EScroll(el);
 ```
 
