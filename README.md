@@ -33,7 +33,7 @@ new EScroll(el);
 or 
 
 ```
-<script src='这里需要cdn地址'></script>
+<script src='http://oqvlh6ipq.bkt.clouddn.com/miniScroll.js'></script>
 new EScroll(el);
 ```
 
