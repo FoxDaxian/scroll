@@ -1,6 +1,6 @@
 {
   "name": "scroll",
-  "version": "1.3.4",
+  "version": "1.0.0",
   "main": "./dist/static/bundle.js",
   "repository": "https://github.com/a13821190779/scroll.git",
   "author": "a13821190779 <945039036@qq.com>",
@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "cross-env DEBUG=console.* babel-node ./build/webpack.dev.js",
     "build": "cross-env DEBUG=console.* babel-node ./build/webpack.prod.js",
-    "release": "standard-version && git push"
+    "release": "standard-version"
   },
   "husky": {
     "hooks": {
