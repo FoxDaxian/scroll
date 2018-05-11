@@ -1,6 +1,6 @@
 {
   "name": "miniscroll",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "main": "./dist/static/miniScroll.js",
   "repository": "https://github.com/a13821190779/scroll.git",
   "author": "a13821190779 <945039036@qq.com>",
