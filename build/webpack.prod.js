@@ -2,7 +2,7 @@
  * @Author: fox 
  * @Date: 2018-05-10 17:18:16 
  * @Last Modified by: fox
- * @Last Modified time: 2018-05-10 18:10:51
+ * @Last Modified time: 2018-05-11 11:01:42
  */
 
 import webpack from 'webpack';
@@ -46,6 +46,9 @@ const devConf = merge(defaultConf, {
             uglifyOptions: {
                 comments: false,
                 compress: {
+					collapse_vars: true,
+					drop_console: true,
+					reduce_vars: true,
                     warnings: false
                 }
             }

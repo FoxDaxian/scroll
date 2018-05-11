@@ -2,7 +2,7 @@
  * @Author: fox 
  * @Date: 2018-05-03 11:07:37 
  * @Last Modified by: fox
- * @Last Modified time: 2018-05-10 19:46:58
+ * @Last Modified time: 2018-05-11 11:01:26
  */
 
 // touchstart:		手指触摸到一个 DOM 元素时触发。
@@ -820,6 +820,7 @@ class Scroll {
     // offsetX 和 offsetY定义像素级的偏移量，所以你可以滚动到元素并且加上特别的偏移量。但并不仅限于此。如果把这两个参数设置为true，元素将会位于屏幕的中间。
 
     scrollToElement(opt) {
+		console.log(123);
         let { el, offset } = opt;
         el = el.nodeType ? el : this.wrap.querySelector(el);
         if (!el) {
