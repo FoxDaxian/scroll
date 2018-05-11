@@ -1,6 +1,6 @@
 {
   "name": "scroll",
-  "version": "1.0.3",
+  "version": "1.0.1",
   "main": "./dist/static/bundle.js",
   "repository": "https://github.com/a13821190779/scroll.git",
   "author": "a13821190779 <945039036@qq.com>",
