@@ -1,12 +1,12 @@
-# easyScroll
+# easyscroll
 
 ### so easy!
 
 # install
 ```
-npm i easyScroll
+npm i easyscroll
 or
-yarn add easyScroll
+yarn add easyscroll
 ```
 
 # usage
@@ -25,8 +25,8 @@ html
 
 
 ```
-// const EScroll = require('easyScroll')
-import EScroll from 'easyScroll'
+// const EScroll = require('easyscroll')
+import EScroll from 'easyscroll'
 new EScroll(el);
 ```
 
