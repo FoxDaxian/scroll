@@ -484,6 +484,8 @@ class Scroll {
     }
 
     refresh() {
+        this.setEasyBox()
+        this.initMax()
         this.mark.scroll.curTranslate = 0;
         this.mark.inertialMotion.dist.now = 0;
         this.mark.inertialMotion.speed = 0;
