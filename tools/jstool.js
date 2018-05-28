@@ -1,4 +1,4 @@
-export const throttle = (fn, time = 10) => {
+export const throttle = (fn, time = 16) => {
     let last;
     let timeId = null;
 
@@ -18,3 +18,18 @@ export const throttle = (fn, time = 10) => {
         }
     };
 };
+
+export const debounce = (fn, time = 16) => {
+    let timeId = null;
+
+    return function () {
+        const context = this;
+        const args = arguments;
+        timeId && clearTimeout(timeId);
+
+        timeId = setTimeout(function() {
+            fn.call(context, args)
+            timeId = null
+        }, time);
+    }
+}

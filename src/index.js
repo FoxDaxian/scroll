@@ -2,7 +2,7 @@
  * @Author: fox 
  * @Date: 2018-05-03 11:07:37 
  * @Last Modified by: fox
- * @Last Modified time: 2018-05-11 12:17:24
+ * @Last Modified time: 2018-05-28 12:24:40
  */
 
 // touchstart:		手指触摸到一个 DOM 元素时触发。
@@ -13,7 +13,7 @@
 // targetTouches:  正在触摸当前 DOM 元素上的手指的一个列表。
 // changedTouches: 涉及当前事件的手指的一个列表
 
-import { throttle } from '../tools/jstool';
+import { throttle, debounce } from '../tools/jstool';
 import 'scss/index.scss';
 
 const noop = function () { };
@@ -124,45 +124,15 @@ class Scroll {
             if (!el) {
                 throw 'please pass the correct element';
             }
-            this.i = 0;
             this.mark.direction = direction;
             this.mark.scrollbars = scrollbars;
             this.mark.bounce = bounce;
             this.mark.inertialMotion.a = smooth;
             this.stretch.strength = pullForce;
 
-            this.wrapBox = null;
-
             this.wrap = el;
             this.wrap.classList.add('easywrap');
             this.preventNativeScroll();
-            this.wrapAll();
-            if (this.mark.scrollbars) {
-                this.scrollBar();
-            }
-
-            this.on('setBarTranslate', coordinate => {
-                this.bar.x = coordinate.x;
-                this.bar.y = coordinate.y;
-                this.setbarTranslate(coordinate.x, coordinate.y);
-            });
-            this.on('setCoordinate', coordinate => {
-                this.mark.scroll.x = coordinate.x;
-                this.mark.scroll.y = coordinate.y;
-                this.setTranslate(this.mark.scroll.x, this.mark.scroll.y);
-            });
-            this.touchStart = this.touchStart.bind(this);
-
-            this.outOfBounds = throttle(this.outOfBounds).bind(this);
-            this.touchMove = throttle(this.touchMove).bind(this);
-
-            this.touchEnd = this.touchEnd.bind(this);
-
-            this.barScroll = this.barScroll.bind(this);
-
-            this.initTouchStart();
-            this.initTouchMove();
-            this.initTouchEnd();
 
             this.mark.isVertical = this.mark.direction === 'vertical';
             if (!this.mark.isVertical) {
@@ -186,38 +156,72 @@ class Scroll {
                 dir: this.mark.isVertical ? 'y' : 'x'
             };
 
-            if (
-                this.wrapBox[this.opt.offsetSize] <
-                this.wrap[this.opt.offsetSize]
-            ) {
-                this.stretch.stretchMax = this.stretch.specialValue;
-            } else {
-                this.stretch.stretchMax =
-                    (this.wrapBox[this.opt.offsetSize] -
-                        this.wrap[this.opt.offsetSize]) *
-                    -1;
-                !this.stretch.stretchMax &&
-                    (this.stretch.stretchMax = this.stretch.specialValue);
+            this.wrapAll();
+            this.initMax()
+            this.setTranslate();
+            this.detect();
+            if (this.mark.scrollbars) {
+                this.scrollBar();
             }
-            this.mark.scroll.maxTranslate =
-                this.wrapBox[this.opt.offsetSize] -
-                this.wrap[this.opt.offsetSize];
+
+            this.touchStart = this.touchStart.bind(this);
+            this.outOfBounds = throttle(this.outOfBounds).bind(this);
+            this.touchMove = throttle(this.touchMove).bind(this);
+            this.touchEnd = this.touchEnd.bind(this);
+            this.barScroll = this.barScroll.bind(this);
+
+            this.initTouchStart();
+            this.initTouchMove();
+            this.initTouchEnd();
+
+            this.on('setBarTranslate', coordinate => {
+                this.bar.x = coordinate.x;
+                this.bar.y = coordinate.y;
+                this.setbarTranslate(coordinate.x, coordinate.y);
+            });
+            this.on('setCoordinate', coordinate => {
+                this.mark.scroll.x = coordinate.x;
+                this.mark.scroll.y = coordinate.y;
+                this.setTranslate(this.mark.scroll.x, this.mark.scroll.y);
+            });
         } catch (e) {
             throw e;
         }
     }
 
+    detect() {
+        const observer = new MutationObserver(debounce(() => {
+            this.setEasyBox()
+            this.initMax()
+        }));
+        const options = {
+            childList: true,
+            subtree: true
+        };
+        observer.observe(this.wrapBox, options);
+    }
+
     // 创建元素包裹容器内所有元素
     wrapAll() {
-        const fragment = document.createDocumentFragment();
-        let elWidth = 0;
-        let elHeight = 0;
         this.wrapBox = document.createElement('div');
         this.wrapBox.classList.add('easybox');
-        // 需要手动设置高度
-        this.setTranslate();
-        const allChildNodes = Array.from(this.wrap.children);
-        allChildNodes.forEach((child, i) => {
+        this.setEasyBox()
+        const fragment = document.createDocumentFragment();
+        fragment.appendChild(this.wrapBox);
+        this.wrap.appendChild(fragment);
+    }
+
+    setEasyBox() {
+        const { elWidth, elHeight } = this.getInnerBoxSize()
+        this.wrapBox.style.width = `${elWidth}px`;
+        this.wrapBox.style.height = `${elHeight}px`;
+    }
+
+    getInnerBoxSize() {
+        let elWidth = 0, elHeight = 0;
+        const canAppend = !this.wrapAllChild
+        this.wrapAllChild || (this.wrapAllChild = Array.from(this.wrap.children));
+        this.wrapAllChild.forEach((child, i) => {
             elWidth +=
                 child.offsetWidth +
                 parseInt(getComputedStyle(child).marginLeft) +
@@ -226,12 +230,29 @@ class Scroll {
                 child.offsetHeight +
                 parseInt(getComputedStyle(child).marginTop) +
                 parseInt(getComputedStyle(child).marginBottom);
-            this.wrapBox.appendChild(this.wrap.removeChild(child));
+
+            canAppend && this.wrapBox.appendChild(this.wrap.removeChild(child));
         });
-        this.wrapBox.style.width = `${elWidth}px`;
-        this.wrapBox.style.height = `${elHeight}px`;
-        fragment.appendChild(this.wrapBox);
-        this.wrap.appendChild(fragment);
+        return { elWidth, elHeight }
+    }
+
+    initMax() {
+        if (
+            this.wrapBox[this.opt.offsetSize] <
+            this.wrap[this.opt.offsetSize]
+        ) {
+            this.stretch.stretchMax = this.stretch.specialValue;
+        } else {
+            this.stretch.stretchMax =
+                (this.wrapBox[this.opt.offsetSize] -
+                    this.wrap[this.opt.offsetSize]) *
+                -1;
+            !this.stretch.stretchMax &&
+                (this.stretch.stretchMax = this.stretch.specialValue);
+        }
+        this.mark.scroll.maxTranslate =
+            this.wrapBox[this.opt.offsetSize] -
+            this.wrap[this.opt.offsetSize];
     }
 
     // 配置滚动条
@@ -317,8 +338,8 @@ class Scroll {
             const forWxBox = document.createElement('div');
             forWxBox.classList.add('lowVersion');
             forWxBox.style.height = '100vh';
-            const allChildNodes = Array.from(document.body.children);
-            allChildNodes.forEach((child, i) => {
+            const bodyChild = Array.from(document.body.children);
+            bodyChild.forEach((child, i) => {
                 if (
                     !Array.includes.call(
                         ['script', 'link'],
@@ -386,10 +407,10 @@ class Scroll {
     }
 
     // 触发监听
-    emit(event, options = {}, coordinate = { x: 0, y: 0 }) {
+    emit(event, options = {}) {
         const events = this.eventQueue[event];
         for (let i = 0, len = events.length; i < len; i++) {
-            events[i].call(this, options, coordinate);
+            events[i].call(this, options);
         }
     }
 
@@ -818,9 +839,7 @@ class Scroll {
     }
 
     // offsetX 和 offsetY定义像素级的偏移量，所以你可以滚动到元素并且加上特别的偏移量。但并不仅限于此。如果把这两个参数设置为true，元素将会位于屏幕的中间。
-
     scrollToElement(opt) {
-		console.log(123);
         let { el, offset } = opt;
         el = el.nodeType ? el : this.wrap.querySelector(el);
         if (!el) {
