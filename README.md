@@ -41,7 +41,7 @@ new miniScroll(el);
 * Class
 	
 ```
-const scroll = new Scroll('.wrap', {
+const scroll = new Scroll('.scrollWrap', {
 	direction: 'vertical',
 	bounce: true,
 	scrollbars: true,
